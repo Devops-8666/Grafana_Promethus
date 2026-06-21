@@ -1,0 +1,215 @@
+Yes, both are free.
+
+Prometheus Community Edition
+Grafana OSS (Open Source)
+
+Since your goal is interview preparation, the fastest way is Docker, not Kubernetes.
+
+Prerequisites
+
+Install:
+
+Docker Desktop
+
+Verify:
+
+docker --version
+Step 1: Create Folder
+mkdir sre-lab
+cd sre-lab
+
+Create file:
+
+prometheus.yml
+
+Put this content:
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+Step 2: Run Prometheus
+
+From the folder containing prometheus.yml:
+
+docker run -d \
+--name prometheus \
+-p 9090:9090 \
+-v ${PWD}/prometheus.yml:/etc/prometheus/prometheus.yml \
+prom/prometheus
+
+If you're on Windows PowerShell:
+
+docker run -d `
+--name prometheus `
+-p 9090:9090 `
+-v ${PWD}\prometheus.yml:/etc/prometheus/prometheus.yml `
+prom/prometheus
+
+Open:
+
+http://localhost:9090
+
+You should see Prometheus.
+
+Step 3: Run Grafana
+docker run -d \
+--name grafana \
+-p 3000:3000 \
+grafana/grafana
+
+Open:
+
+http://localhost:3000
+
+Default login:
+
+Username: admin
+Password: admin
+
+Grafana will ask you to change the password.
+
+Step 4: Add Prometheus to Grafana
+
+In Grafana:
+
+Connections
+   ↓
+Data Sources
+   ↓
+Add Data Source
+   ↓
+Prometheus
+
+URL:
+
+http://host.docker.internal:9090
+
+(Windows Docker Desktop)
+
+Click:
+
+Save & Test
+
+You should see:
+
+Data source is working
+Step 5: Create First Dashboard
+
+Grafana:
+
+Dashboards
+  ↓
+New Dashboard
+  ↓
+Add Visualization
+
+Data Source:
+
+Prometheus
+
+Query:
+
+up
+
+Run query.
+
+You should see:
+
+1
+
+Meaning Prometheus is healthy.
+
+Step 6: Learn Basic PromQL
+CPU-like Rate
+rate(prometheus_http_requests_total[5m])
+Targets Up
+up
+Memory
+process_resident_memory_bytes
+Step 7: Simulate SLI
+
+Create panel:
+
+Query:
+
+up
+
+Interpretation:
+
+1 = Available
+0 = Down
+
+SLI:
+
+Availability
+
+SLO:
+
+99.9%
+Step 8: Add Node Exporter (Very Useful)
+
+Run:
+
+docker run -d \
+--name node-exporter \
+-p 9100:9100 \
+prom/node-exporter
+
+Edit prometheus.yml:
+
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets:
+        - localhost:9090
+
+  - job_name: node
+    static_configs:
+      - targets:
+        - host.docker.internal:9100
+
+Restart Prometheus:
+
+docker restart prometheus
+
+Now Prometheus collects:
+
+CPU
+Memory
+Disk
+Network
+Step 9: Import Ready Dashboard
+
+Grafana:
+
+Dashboards
+  ↓
+Import
+
+Use Dashboard ID:
+
+1860
+
+(Node Exporter Full Dashboard)
+
+You'll instantly get:
+
+CPU
+Memory
+Disk
+Network
+
+This looks very similar to production monitoring.
+
+Interview Goal
+
+After 1–2 evenings of practice, you should be able to say:
+
+"I have hands-on experience with Geneos and Kibana in production. For learning cloud-native observability, I set up Prometheus and Grafana locally, configured Prometheus as a data source, created dashboards, monitored host metrics via Node Exporter, and explored how SLI/SLO and alerting are implemented in modern Kubernetes environments."
